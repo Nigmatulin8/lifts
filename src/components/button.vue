@@ -25,20 +25,20 @@
         props: {
             // Стек вызовов
             floorCallStack: {
-                type: Array,
+                type    : Array,
                 required: false,
-                default: [],
+                default : [],
             },
 
             // Все этажи
             floors: {
-                type: Number,
+                type    : Number,
                 required: true,
             },
 
             // Этаж, к которой принажлежит кнопка
             floor: {
-                type: Number,
+                type    : Number,
                 required: true,
             },
         },
@@ -57,7 +57,7 @@
             callLift(floor) {
                 this.$emit('click', floor);
             },
-        }
+        },
     }
 </script>
 

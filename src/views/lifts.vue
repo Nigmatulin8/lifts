@@ -42,9 +42,11 @@
         },
 
         data: () => ({
-            floors: 7,
+            floors: 7, // Количество этажей | Кол-во этажей менять тут
             lifts: [
                 /**
+                 * Кол-во лифтов менять тут
+                 * 
                  * @param id - id лифта -_-
                  * @param status - -1 - отдыхает, 0 - свободен, 1 - едет
                  * @param targetFloor - Этаж на который едем
@@ -76,15 +78,15 @@
                 },
             ],
 
-            floorCallStack: [],
+            floorCallStack: [], // Стек вызовов лифта
         }),
 
         watch: {
             floorCallStack: {
                 handler() {
                     this.liftsRun();
-                }
-            }
+                },
+            },
         },
 
         mounted() {
@@ -142,7 +144,7 @@
 
                 this.lifts[pos].status = 0;
 
-                // Удаляем этаж, на который уже выехали
+                // Удаляем этаж, на который уже выехали (удаляем после отдыха лифта)
                 this.floorCallStack = this.floorCallStack.filter(floor => floor !== data.activeLift.targetFloor);
 
                 this.saveToLocaleStorage();
@@ -154,6 +156,7 @@
                  * 2. Если на выбранный этаж никто не едет, то ищем ближайший лифт к целевому и запускаем.
                  */
                 for (let i = 0; i < this.floorCallStack.length; i++) {
+                    // Занят этаж или нет. По умолчанию этаж свободный.
                     let isFloorIsBusy = false;
 
                     for (let j = 0; j < this.lifts.length; j++) {
@@ -178,7 +181,7 @@
                                     const diffBerweenPotentialLift = freeLifts[k].targetFloor - this.floorCallStack[i];
 
                                     if (Math.abs(diffBetweenClosestLift) > Math.abs(diffBerweenPotentialLift))
-                                        closestLift = freeLifts[k];
+                                        closestLift = freeLifts[k];  
                                 }
                             }
 
@@ -228,8 +231,8 @@
                     this.lifts = parsedLifts;
                     this.floorCallStack = parsedStack;
                 }
-            }
-        }
+            },
+        },
     }
 </script>
 

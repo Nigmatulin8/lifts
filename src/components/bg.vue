@@ -12,10 +12,10 @@
     export default {
         props: {
             floors: {
-                type: Number,
+                type    : Number,
                 required: false,
-                default: 5,
-            }
+                default : 5,
+            },
         },
 
         name: 'Background',

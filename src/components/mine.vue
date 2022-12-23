@@ -18,12 +18,12 @@
 
         props: {
             lift: {
-                type: Object,
+                type    : Object,
                 required: true,
             },
 
             floors: {
-                type: Number,
+                type    : Number,
                 required: true,
             },
         },
@@ -31,8 +31,6 @@
         components: {
             Lift,
         },
-
-        data: () => ({ }),
 
         methods: {
             handleStartLiftRest(e) {
@@ -46,7 +44,7 @@
             handleStartLift(e) {
                 this.$emit('startLift', e);
             },
-        }
+        },
     }
 </script>
 

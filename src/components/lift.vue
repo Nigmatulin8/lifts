@@ -27,7 +27,7 @@
             },
 
             floors: {
-                type: Number,
+                type    : Number,
                 required: true,
             },
         },
@@ -68,17 +68,18 @@
         },
 
         methods: {
-            transitionStartHandler(event) {
+            transitionStartHandler() {
                 this.start = true;
 
                 this.$emit('startLift', this.lift);
             },
 
-            transitionEndHandler(event) {
+            transitionEndHandler() {
                 this.start = false;
 
                 this.$emit('startLiftRest', this.lift);
 
+                // Запускаем таймер отдыха
                 setTimeout(() => {
                     this.$emit('endLiftRest', this.lift);
                 }, 3000);
