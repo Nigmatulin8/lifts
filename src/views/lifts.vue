@@ -87,6 +87,16 @@
             }
         },
 
+        mounted() {
+            this.getFromLocaleStorage();
+
+            this.liftsRun();
+        },
+
+        beforeDestroy() {
+            this.saveToLocaleStorage();
+        },
+
         methods: {
             getLiftActiveLiftData(activeLift) {
                 // Находим индекс активного лифта в общем списке лифтов
@@ -121,6 +131,8 @@
                 const pos = data.pos;
 
                 this.lifts[pos].status = -1;
+
+                this.saveToLocaleStorage();
             },
 
             handleEndLiftRest(e) {
@@ -132,6 +144,8 @@
 
                 // Удаляем этаж, на который уже выехали
                 this.floorCallStack = this.floorCallStack.filter(floor => floor !== data.activeLift.targetFloor);
+
+                this.saveToLocaleStorage();
             },
 
             liftsRun() {
@@ -139,7 +153,6 @@
                  * 1. Смотрим, едут ли на целевой этаж лифты или уже находятся там, если да, то берем следующий этаж и тд.
                  * 2. Если на выбранный этаж никто не едет, то ищем ближайший лифт к целевому и запускаем.
                  */
-
                 for (let i = 0; i < this.floorCallStack.length; i++) {
                     let isFloorIsBusy = false;
 
@@ -181,6 +194,39 @@
                             return;
                         }
                     }
+                }
+            },
+
+            saveToLocaleStorage() {
+                // Убираем промежуточные состояния у лифтов
+                const liftsListForSave = this.lifts.map(lift => lift = {
+                    ...lift,
+                    status: 0,
+                });
+
+                // Сохраняем в стор
+                localStorage.setItem('lifts', JSON.stringify(liftsListForSave));
+                localStorage.setItem('stack', JSON.stringify(this.floorCallStack));
+            },
+
+            getFromLocaleStorage() {
+                // Достаём из стора
+                const lifts = localStorage.getItem('lifts');
+                const stack = localStorage.getItem('stack');
+
+                if (lifts && stack) {
+                    const parsedLifts = JSON.parse(lifts);
+                    let parsedStack = JSON.parse(stack);
+
+                    // Если мы сохранили положения лифтов в стеке в каком-то промежуточном состоянии,
+                    // то при получении данных из хранилища мы будем использовать завершенное состояние лифтов на момент сохранения.
+                    const allTargetFloors = parsedLifts.map(lift => lift.targetFloor);
+
+                    if (parsedStack.length)
+                        parsedStack = parsedStack.filter((pos) => !allTargetFloors.includes(pos));
+
+                    this.lifts = parsedLifts;
+                    this.floorCallStack = parsedStack;
                 }
             }
         }
