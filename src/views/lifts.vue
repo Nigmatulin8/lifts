@@ -15,33 +15,33 @@
         />
 
         <div class="buttons">
-            <div
-                class="buttons__wrapper"
-                :style="{ 'height': `calc(100% / ${floors})` }"
-                v-for="floor in floors"
-            >
-                <button @click="callLift(floors - floor + 1)">
-                   {{ floors - floor + 1  }}
-                </button>
-            </div>
+            <Button
+                v-for="i in floors"
+                :floors="floors"
+                :floor="i"
+                :key="i"
+                @click="callLift"           
+            />
         </div>
     </div>
 </template>
 
 <script>
-    import Background from '../components/bg.vue';
     import Mine from '../components/mine.vue';
+    import Background from '../components/bg.vue';
+    import Button from '../components/button.vue';
 
     export default {
         name: 'Lifts',
 
         components: {
-            Background,
             Mine,
+            Button,
+            Background,
         },
 
         data: () => ({
-            floors: 5,
+            floors: 7,
             lifts: [
                 /**
                  * @param id - id лифта -_-
@@ -74,46 +74,114 @@
                     startFloor  : 1,
                 },
             ],
+
+            floorCallStack: [],
         }),
 
+        watch: {
+            floorCallStack: {
+                handler() {
+                    this.liftsRun();
+                }
+            }
+        },
+
         methods: {
-            getLiftPosition(activeLift) {
+            getLiftActiveLiftData(activeLift) {
                 // Находим индекс активного лифта в общем списке лифтов
-                return this.lifts.map(lift => lift.id).indexOf(activeLift.id);
+                return {
+                    activeLift,
+                    pos: this.lifts.map(lift => lift.id).indexOf(activeLift.id),
+                };
+            },
+
+            isLiftOnTheFloor(floor) {
+                // Проверяем есть ли уже лифт на этаже, на которых хотим его вызвать
+                return this.lifts.map(lift => lift.targetFloor).indexOf(floor);
             },
 
             callLift(floor) {
-                // Наш прошлый целевой этаж также является нашим этажом старта
-                // this.lifts[0].startFloor = this.lifts[0].targetFloor;
-
-                // this.lifts[0].targetFloor = floor;
-
-                for (let i = 0; i < this.lifts.length; i++) {
-                    if (this.lifts[i].status === 0) {
-                        this.lifts[i].startFloor = this.lifts[i].targetFloor;
-                        this.lifts[i].targetFloor = floor;
-                        break;
-                    }
-                }
+                // Если в очереди нету этажа и на этом этаже уже нету лифта,
+                // и на него ещё никто не едет, то можем к нему отправить свободный лифт
+                if (this.floorCallStack.indexOf(floor) === -1 && this.isLiftOnTheFloor(floor) === -1)
+                    this.floorCallStack.push(floor);
             },
 
             handleStartLift(e) {
-                const pos = this.getLiftPosition(e);
-
+                // Лифт поехал
+                const data = this.getLiftActiveLiftData(e);
+                const pos = data.pos;
                 this.lifts[pos].status = 1;
             },
 
             handleStartLiftRest(e) {
-                const pos = this.getLiftPosition(e);
+                // Лифт приехал и начал отдыхать
+                const data = this.getLiftActiveLiftData(e);
+                const pos = data.pos;
 
                 this.lifts[pos].status = -1;
             },
 
             handleEndLiftRest(e) {
-                const pos = this.getLiftPosition(e);
+                // Лифт закончил отдыхать и готов ехать
+                const data = this.getLiftActiveLiftData(e);
+                const pos = data.pos;
 
                 this.lifts[pos].status = 0;
+
+                // Удаляем этаж, на который уже выехали
+                this.floorCallStack = this.floorCallStack.filter(floor => floor !== data.activeLift.targetFloor);
             },
+
+            liftsRun() {
+                /**
+                 * 1. Смотрим, едут ли на целевой этаж лифты или уже находятся там, если да, то берем следующий этаж и тд.
+                 * 2. Если на выбранный этаж никто не едет, то ищем ближайший лифт к целевому и запускаем.
+                 */
+
+                for (let i = 0; i < this.floorCallStack.length; i++) {
+                    let isFloorIsBusy = false;
+
+                    for (let j = 0; j < this.lifts.length; j++) {
+                        // Если на целевой этаж уже кто-то едет, то заканчиваем упражнение (лифт должен быть свободным)
+                        if (this.floorCallStack[i] === this.lifts[j].targetFloor) {
+                            isFloorIsBusy = true;
+                            break;
+                        }
+
+                        if (j === this.lifts.length - 1 && !isFloorIsBusy) {
+                            // Собираем все свободные лифты
+                            let freeLifts = this.lifts.filter(lift => lift.status === 0);
+
+                            // Если нету ближайшего сразу, то первый попавшийся лифт будет самым близким
+                            let closestLift = freeLifts.length ? freeLifts[0] : null;
+
+                            // Ищем ближайший лифт к целевому этажу
+                            if (freeLifts.length) {
+                                for (let k = 0; k < freeLifts.length; k++) {
+                                    // Разница от ближайшего лифта до целевого этажа
+                                    const diffBetweenClosestLift = closestLift.targetFloor - this.floorCallStack[i];
+                                    const diffBerweenPotentialLift = freeLifts[k].targetFloor - this.floorCallStack[i];
+
+                                    if (Math.abs(diffBetweenClosestLift) > Math.abs(diffBerweenPotentialLift))
+                                        closestLift = freeLifts[k];
+                                }
+                            }
+
+                            // Если у нас есть подходящий лифт, то запускаем его.
+                            // Если нет, значить все занято. Ждем когда освободится
+                            if (closestLift !== null) {
+                                const readyLiftIndex = this.lifts.map(l => l.id).indexOf(closestLift.id);
+
+                                this.lifts[readyLiftIndex].startFloor = this.lifts[readyLiftIndex].targetFloor;
+                                this.lifts[readyLiftIndex].targetFloor = this.floorCallStack[i];
+                            }
+
+                            return;
+                        }
+                    }
+                }
+            }
         }
     }
 </script>
@@ -135,11 +203,5 @@
         margin-left: 8px;
         border-right: 1px solid rgba(50, 100, 150, .2);
         border-left: 1px solid rgba(50, 100, 150, .2);
-
-        &__wrapper {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
     }
 </style>

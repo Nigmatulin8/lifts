@@ -81,7 +81,7 @@
 
                 setTimeout(() => {
                     this.$emit('endLiftRest', this.lift);
-                }, 3000)
+                }, 3000);
             },
         }
     }
