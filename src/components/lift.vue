@@ -1,8 +1,10 @@
 <template>
     <div
         class="lift"
-        :style="{ 'height': `calc(100% / ${floors})` }"
-    />
+        :style="liftStyles"
+    >
+        {{  lift.targetFloor }}
+    </div>
 </template>
 
 <script>
@@ -22,6 +24,19 @@
         },
 
         data: () => ({ }),
+
+        computed: {
+            liftStyles() {
+                // Берём модуль разности, чтоб секунды не были отрицательным на случай, если едем сверху вниз.
+                let animationSeconds = Math.abs(this.lift.targetFloor - this.lift.startFloor);
+
+                return {
+                    'height': `calc(100% / ${this.floors})`,
+                    'transition': `all ${animationSeconds}s linear`,
+                    'bottom': `calc((100% / ${this.floors}) * ${this.lift.targetFloor - 1})`
+                }
+            },
+        }
     }
 </script>
 
