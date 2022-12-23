@@ -9,6 +9,9 @@
             :lift="lift"
             :floors="floors"
             :key="lift.id"
+            @startLift="handleStartLift($event)"
+            @startLiftRest="handleStartLiftRest($event)"
+            @endLiftRest="handleEndLiftRest($event)"
         />
 
         <div class="buttons">
@@ -50,18 +53,67 @@
                     id          : 0,
                     status      : 0,
                     targetFloor : 1,
-                    startFloor  : 0,
+                    startFloor  : 1,
+                },
+                {
+                    id          : 1,
+                    status      : 0,
+                    targetFloor : 1,
+                    startFloor  : 1,
+                },
+                {
+                    id          : 2,
+                    status      : 0,
+                    targetFloor : 1,
+                    startFloor  : 1,
+                },
+                {
+                    id          : 3,
+                    status      : 0,
+                    targetFloor : 1,
+                    startFloor  : 1,
                 },
             ],
         }),
 
         methods: {
+            getLiftPosition(activeLift) {
+                // Находим индекс активного лифта в общем списке лифтов
+                return this.lifts.map(lift => lift.id).indexOf(activeLift.id);
+            },
+
             callLift(floor) {
                 // Наш прошлый целевой этаж также является нашим этажом старта
-                this.lifts[0].startFloor = this.lifts[0].targetFloor;
+                // this.lifts[0].startFloor = this.lifts[0].targetFloor;
 
-                this.lifts[0].targetFloor = floor;
-            }
+                // this.lifts[0].targetFloor = floor;
+
+                for (let i = 0; i < this.lifts.length; i++) {
+                    if (this.lifts[i].status === 0) {
+                        this.lifts[i].startFloor = this.lifts[i].targetFloor;
+                        this.lifts[i].targetFloor = floor;
+                        break;
+                    }
+                }
+            },
+
+            handleStartLift(e) {
+                const pos = this.getLiftPosition(e);
+
+                this.lifts[pos].status = 1;
+            },
+
+            handleStartLiftRest(e) {
+                const pos = this.getLiftPosition(e);
+
+                this.lifts[pos].status = -1;
+            },
+
+            handleEndLiftRest(e) {
+                const pos = this.getLiftPosition(e);
+
+                this.lifts[pos].status = 0;
+            },
         }
     }
 </script>

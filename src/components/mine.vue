@@ -3,6 +3,9 @@
         <Lift 
             :lift="lift"
             :floors="floors"       
+            @startLiftRest="handleStartLiftRest($event)"
+            @endLiftRest="handleEndtLiftRest($event)"
+            @startLift="handleStartLift($event)"
         />
     </div>
 </template>
@@ -30,6 +33,20 @@
         },
 
         data: () => ({ }),
+
+        methods: {
+            handleStartLiftRest(e) {
+                this.$emit('startLiftRest', e)
+            },
+
+            handleEndtLiftRest(e) {
+                this.$emit('endLiftRest', e)
+            },
+
+            handleStartLift(e) {
+                this.$emit('startLift', e);
+            },
+        }
     }
 </script>
 
