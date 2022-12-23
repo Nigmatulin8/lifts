@@ -17,6 +17,7 @@
         <div class="buttons">
             <Button
                 v-for="i in floors"
+                :floorCallStack="floorCallStack"
                 :floors="floors"
                 :floor="i"
                 :key="i"
